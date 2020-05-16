@@ -8,6 +8,8 @@ import javax.swing.JScrollPane;
 import javax.swing.JMenu;
 import javax.swing.JTextArea;
 import javax.swing.ScrollPaneConstants;
+import javax.swing.UIManager;
+import javax.swing.UnsupportedLookAndFeelException;
 
 import java.awt.Color;
 import java.awt.Font;
@@ -38,8 +40,14 @@ public class Editor {
 
 	/**
 	 * Launch the application.
+	 * @throws UnsupportedLookAndFeelException 
+	 * @throws IllegalAccessException 
+	 * @throws InstantiationException 
+	 * @throws ClassNotFoundException 
 	 */
-	public static void main(String[] args) {
+	public static void main(String[] args) throws ClassNotFoundException, InstantiationException, IllegalAccessException, UnsupportedLookAndFeelException {
+
+		UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
@@ -55,8 +63,12 @@ public class Editor {
 	/**
 	 * Create the application.
 	 * @throws IOException 
+	 * @throws UnsupportedLookAndFeelException 
+	 * @throws IllegalAccessException 
+	 * @throws InstantiationException 
+	 * @throws ClassNotFoundException 
 	 */
-	public Editor() throws IOException {
+	public Editor() throws IOException, ClassNotFoundException, InstantiationException, IllegalAccessException, UnsupportedLookAndFeelException {
 		openedfile = null;
 		initialize();
 	}
@@ -64,10 +76,14 @@ public class Editor {
 	/**
 	 * Initialize the contents of the frame.
 	 * @throws IOException 
+	 * @throws UnsupportedLookAndFeelException 
+	 * @throws IllegalAccessException 
+	 * @throws InstantiationException 
+	 * @throws ClassNotFoundException 
 	 */
-	private void initialize() throws IOException {
+	private void initialize() throws IOException, ClassNotFoundException, InstantiationException, IllegalAccessException, UnsupportedLookAndFeelException {
 		
-		
+	
 		
 		frame = new JFrame("Untitled");
 		frame.getContentPane().setBackground(Color.DARK_GRAY);
@@ -138,6 +154,7 @@ public class Editor {
 											FileWriter writer = new FileWriter(openedfile);
 											writer.write(writeString);
 											writer.close();
+											frame.setVisible(false);
 										}
 									}catch (IOException error) {
 										openedfile = null;
@@ -145,7 +162,8 @@ public class Editor {
 									}									
 								}
 							}
-							frame.setVisible(false);	
+							else
+								frame.setVisible(false);	
 						}	
 					}
 					else {
@@ -395,6 +413,7 @@ public class Editor {
 											FileWriter writer = new FileWriter(openedfile);
 											writer.write(writeString);
 											writer.close();
+											frame.setVisible(false);
 										}
 									}catch (IOException error) {
 										openedfile = null;
@@ -402,8 +421,9 @@ public class Editor {
 									}
 									
 								}
-							}
-							frame.setVisible(false);	
+							}						
+							else
+								frame.setVisible(false);	
 						}					
 					}
 					
