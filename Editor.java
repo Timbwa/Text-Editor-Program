@@ -131,6 +131,9 @@ public class Editor {
 								frame.setVisible(false);
 							}
 						}
+						else {
+							frame.setVisible(false);
+						}
 					}catch (IOException error) {
 			            error.printStackTrace();
 					}
@@ -323,8 +326,7 @@ public class Editor {
 								frame.setTitle(openedfile.getName());
 							}
 						}catch (IOException error) {
-							openedfile = null;
-							
+							openedfile = null;						
 				            error.printStackTrace();
 						}
 					}
@@ -389,7 +391,10 @@ public class Editor {
 										
 								frame.setVisible(false);
 							}
-						}					
+						}
+						else {
+							frame.setVisible(false);
+						}
 					}catch (IOException error) {
 			            error.printStackTrace();
 					}
