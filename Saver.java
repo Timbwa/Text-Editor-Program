@@ -26,7 +26,7 @@ public class Saver implements Runnable{
             try {
                 saveWork();
                 System.out.println("Counter: " + counter);
-                Thread.sleep(30000);
+                Thread.sleep(120000);
             } catch (InterruptedException | IOException e) {
                 e.printStackTrace();
             }
