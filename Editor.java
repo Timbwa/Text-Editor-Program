@@ -1,16 +1,7 @@
 package com.TextEditor;
 import java.awt.EventQueue;
 
-import javax.swing.JFrame;
-import javax.swing.JMenuBar;
-import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
-import javax.swing.JScrollPane;
-import javax.swing.JMenu;
-import javax.swing.JTextArea;
-import javax.swing.ScrollPaneConstants;
-import javax.swing.UIManager;
-import javax.swing.UnsupportedLookAndFeelException;
+import javax.swing.*;
 
 import java.awt.Color;
 import java.awt.Font;
@@ -20,7 +11,6 @@ import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
 
-import javax.swing.JFileChooser;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -32,15 +22,25 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.BorderLayout;
 
+import com.inet.jortho.PopupListener;
+import com.inet.jortho.SpellChecker;
+import com.inet.jortho.FileUserDictionary;
+import com.inet.jortho.SpellCheckerOptions;
+
 public class Editor {
 
     private JFrame frame;
     final JFileChooser chooser = new JFileChooser();
     final Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
     private static File openedfile;
-    public static SpellChecker spellChecker;
+    public static SpellCheck spellCheck;
+    public static SpellCheckerOptions checkerOptions;
     public static Saver saver;
     private static JTextArea textArea;
+    private static String dictionaryPath;
+
+
+
 
     /**
      * Launch the application.
@@ -55,6 +55,15 @@ public class Editor {
         EventQueue.invokeLater(new Runnable() {
             public void run() {
                 try {
+                    textArea = new JTextArea();
+                    checkerOptions = new SpellCheckerOptions();
+                    spellCheck = new SpellCheck(textArea);
+
+                    spellCheck.setTextArea(textArea);
+
+                    saver = new Saver(openedfile, textArea);
+                    dictionaryPath = "/dictionary/";
+
                     Editor window = new Editor();
                     window.frame.setVisible(true);
                 } catch (Exception e) {
@@ -62,10 +71,7 @@ public class Editor {
                 }
             }
         });
-        textArea = new JTextArea();
-        spellChecker = new SpellChecker(textArea);
-        spellChecker.spellCheckThread.start();
-        saver = new Saver(openedfile, textArea);
+        //spellCheck.getThread().start();
     }
 
     /**
@@ -79,6 +85,8 @@ public class Editor {
     public Editor() throws IOException, ClassNotFoundException, InstantiationException, IllegalAccessException, UnsupportedLookAndFeelException {
         openedfile = null;
         initialize();
+        spellCheck.getThread().start();
+
     }
 
     /**
@@ -218,6 +226,7 @@ public class Editor {
                                     FileWriter writer = new FileWriter(openedfile);
                                     writer.write(writeString);
                                     writer.close();
+                                    saver.setOpenedFile(openedfile);
                                     saver.saveThread.start();
                                 }catch (IOException error) {
                                     error.printStackTrace();
@@ -325,7 +334,10 @@ public class Editor {
                         writer.write(writeString);
                         writer.close();
                         saver.setOpenedFile(openedfile);
-                        saver.saveThread.start();
+                        if(!saver.saveThread.isAlive()){
+                            saver.saveThread.start();
+                        }
+
                     }catch (IOException error) {
                         error.printStackTrace();
                     }
@@ -577,5 +589,15 @@ public class Editor {
         mnTheme.add(mntmLight);
 
 
+    }
+
+    public static void setCheckerOptions(){
+        checkerOptions.setCaseSensitive(false);
+        checkerOptions.setIgnoreAllCapsWords(true);
+        checkerOptions.setIgnoreWordsWithNumbers(true);
+        checkerOptions.setSuggestionsLimitMenu(7);
+        checkerOptions.setLanguageDisableVisible(false);
+        JPopupMenu popupMenu = SpellChecker.createCheckerPopup(checkerOptions);
+        textArea.addMouseListener(new PopupListener(popupMenu));
     }
 }
