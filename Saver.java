@@ -1,4 +1,4 @@
-package com.TextEditor;
+
 
 import javax.swing.*;
 import java.io.File;
@@ -24,9 +24,11 @@ public class Saver implements Runnable{
     public void run() {
         while(flag){
             try {
+            	synchronized (saveThread) {
                 saveWork();
-                System.out.println("Counter: " + counter);
-                Thread.sleep(120000);
+                //System.out.println("Counter: " + counter);
+                saveThread.wait(20000);
+            	}
             } catch (InterruptedException | IOException e) {
                 e.printStackTrace();
             }
@@ -41,12 +43,15 @@ public class Saver implements Runnable{
             System.out.println(textArea.getText());
             writer.write(textArea.getText());
             writer.close();
-            System.out.println("Saved, counter: " + counter);
+            //System.out.println("Saved, counter: " + counter);
         //}
     }
     public void stop(){
         if(flag){
             flag = false;
+            synchronized(saveThread) {
+            	saveThread.notifyAll();
+            }
         }
     }
 

@@ -147,10 +147,15 @@ public class Editor {
                                     saver.stop();
                                 }
                                 frame.setVisible(false);
+                                frame.dispose();
                             }
                         }
                         else {
+                        	if(saver.saveThread.isAlive()){
+                                saver.stop();
+                            }
                             frame.setVisible(false);
+                            frame.dispose();
                         }
                     }catch (IOException error) {
                         error.printStackTrace();
@@ -180,6 +185,7 @@ public class Editor {
                                                 saver.stop();
                                             }
                                             frame.setVisible(false);
+                                            frame.dispose();
                                         }
                                     }catch (IOException error) {
                                         openedfile = null;
@@ -187,12 +193,15 @@ public class Editor {
                                     }
                                 }
                             }
-                            else
+                            else {                           
                                 frame.setVisible(false);
+                                frame.dispose();
+                            }
                         }
                     }
                     else {
                         frame.setVisible(false);
+                        frame.dispose();
                     }
                 }
             }
@@ -225,8 +234,6 @@ public class Editor {
                                     FileWriter writer = new FileWriter(openedfile);
                                     writer.write(writeString);
                                     writer.close();
-                                    //saver.setOpenedFile(openedfile);
-                                    //saver.saveThread.start();
                                 }catch (IOException error) {
                                     error.printStackTrace();
                                 }
@@ -449,10 +456,15 @@ public class Editor {
                                     saver.stop();
                                 }
                                 frame.setVisible(false);
+                                frame.dispose();
                             }
                         }
                         else {
+                            if(saver.saveThread.isAlive()){
+                                saver.stop();
+                            }
                             frame.setVisible(false);
+                            frame.dispose();
                         }
                     }catch (IOException error) {
                         error.printStackTrace();
@@ -481,6 +493,7 @@ public class Editor {
                                                 saver.stop();
                                             }
                                             frame.setVisible(false);
+                                            frame.dispose();
                                         }
                                     }catch (IOException error) {
                                         openedfile = null;
@@ -489,13 +502,16 @@ public class Editor {
 
                                 }
                             }
-                            else
+                            else {
                                 frame.setVisible(false);
+                                frame.dispose();
+                                }
                         }
                     }
 
                     else {
                         frame.setVisible(false);
+                        frame.dispose();
                     }
                 }
 
