@@ -1,3 +1,5 @@
+package com.TextEditor;
+
 
 import java.awt.EventQueue;
 
@@ -27,6 +29,22 @@ import com.inet.jortho.SpellChecker;
 import com.inet.jortho.FileUserDictionary;
 import com.inet.jortho.SpellCheckerOptions;
 
+import javax.swing.AbstractAction;
+import javax.swing.JFrame;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.KeyStroke;
+import javax.swing.event.UndoableEditEvent;
+import javax.swing.event.UndoableEditListener;
+import javax.swing.text.Document;
+import javax.swing.text.JTextComponent;
+import javax.swing.undo.CannotRedoException;
+import javax.swing.undo.CannotUndoException;
+import javax.swing.undo.UndoManager;
+import javax.swing.undo.UndoableEdit;
+
+import java.util.Stack;
+
 public class Editor {
 
     private JFrame frame;
@@ -38,7 +56,7 @@ public class Editor {
     public static Saver saver;
     private static JTextArea textArea;
     private static String dictionaryPath;
-
+    public UndoManager undoManager = new UndoManager();
 
 
 
@@ -61,11 +79,58 @@ public class Editor {
 
                     spellCheck.setTextArea(textArea);
 
+
+                    //UNDO REDO
+                    final UndoManager undo = new UndoManager();
+                    Document doc = textArea.getDocument();
+
+                    doc.addUndoableEditListener(new UndoableEditListener() {
+                        @Override
+                        public void undoableEditHappened(UndoableEditEvent e) {
+                            undo.addEdit(e.getEdit());
+                        }
+                    });
+
+                    //UNDO
+                    textArea.getActionMap().put("Undo",
+                            new AbstractAction("Undo") {
+                                public void actionPerformed(ActionEvent evt) {
+                                    try {
+                                        if (undo.canUndo()) {
+                                            undo.undo();
+                                        }
+                                    } catch (CannotUndoException e) {
+                                    }
+                                }
+                            });
+                    //UNDO SHORTCUT (CONTROL + Z)
+                    textArea.getInputMap().put(KeyStroke.getKeyStroke("control Z"), "Undo");
+
+                    //REDO
+                    textArea.getActionMap().put("Redo",
+                            new AbstractAction("Redo") {
+                                public void actionPerformed(ActionEvent evt) {
+                                    try {
+                                        if (undo.canRedo()) {
+                                            undo.redo();
+                                        }
+                                    } catch (CannotRedoException e) {
+                                    }
+                                }
+                            });
+                    //REDO SHORTCUT (CONTROL + Y)
+                    textArea.getInputMap().put(KeyStroke.getKeyStroke("control Y"), "Redo");
+
+
+
                     saver = new Saver(openedfile, textArea);
                     dictionaryPath = "/dictionary/";
 
                     Editor window = new Editor();
                     window.frame.setVisible(true);
+
+
+
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -138,7 +203,7 @@ public class Editor {
                                         FileWriter writer = new FileWriter(openedfile);
                                         writer.write(writeString);
                                         writer.close();
-                                        
+
                                     }catch (IOException error) {
                                         error.printStackTrace();
                                     }
@@ -193,7 +258,7 @@ public class Editor {
                                     }
                                 }
                             }
-                            else {                           
+                            else {
                                 frame.setVisible(false);
                                 frame.dispose();
                             }
@@ -242,7 +307,7 @@ public class Editor {
                                 textArea.setText("");
                                 if (saver.saveThread.isAlive())
                                 	saver.stop();
-                                
+
                             }
                             else if (opt == JOptionPane.NO_OPTION) {
                                 openedfile = null;
@@ -250,7 +315,7 @@ public class Editor {
                                 textArea.setText("");
                                 if (saver.saveThread.isAlive())
                                 	saver.stop();
-                                
+
                             }
                         }
 
@@ -260,7 +325,7 @@ public class Editor {
                             textArea.setText("");
                             if (saver.saveThread.isAlive())
                             	saver.stop();
-                            
+
                         }
 
                     }catch (IOException error) {
@@ -297,7 +362,7 @@ public class Editor {
                                 textArea.setText("");
                                 if (saver.saveThread.isAlive())
                                 	saver.stop();
-                                
+
                             }
                         }
 
@@ -305,7 +370,7 @@ public class Editor {
                             textArea.setText("");
                             if (saver.saveThread.isAlive())
                             	saver.stop();
-                            
+
                         }
 
                     }
@@ -447,7 +512,7 @@ public class Editor {
                                         FileWriter writer = new FileWriter(openedfile);
                                         writer.write(writeString);
                                         writer.close();
-                                        
+
                                     }catch (IOException error) {
                                         error.printStackTrace();
                                     }
@@ -521,6 +586,8 @@ public class Editor {
 
         JMenu mnEdit = new JMenu("Edit");
         menuBar.add(mnEdit);
+
+        
 
         JMenuItem mntmCut = new JMenuItem("Cut");
         mntmCut.addActionListener(new ActionListener() {
