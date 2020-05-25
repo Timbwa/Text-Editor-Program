@@ -1,5 +1,3 @@
-package com.TextEditor;
-
 
 import java.awt.EventQueue;
 
@@ -44,6 +42,8 @@ import javax.swing.undo.UndoManager;
 import javax.swing.undo.UndoableEdit;
 
 import java.util.Stack;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 
 public class Editor {
 
@@ -54,9 +54,12 @@ public class Editor {
     public static SpellCheck spellCheck;
     public static SpellCheckerOptions checkerOptions;
     public static Saver saver;
+    public static ButtonMonitor monitor;
     private static JTextArea textArea;
+    final static UndoManager undo = new UndoManager();
+    
     private static String dictionaryPath;
-    public UndoManager undoManager = new UndoManager();
+  
 
 
 
@@ -73,7 +76,7 @@ public class Editor {
         EventQueue.invokeLater(new Runnable() {
             public void run() {
                 try {
-                    textArea = new JTextArea();
+                    textArea = new JTextArea();             
                     checkerOptions = new SpellCheckerOptions();
                     spellCheck = new SpellCheck(textArea);
 
@@ -81,49 +84,15 @@ public class Editor {
 
 
                     //UNDO REDO
-                    final UndoManager undo = new UndoManager();
-                    Document doc = textArea.getDocument();
-
-                    doc.addUndoableEditListener(new UndoableEditListener() {
-                        @Override
-                        public void undoableEditHappened(UndoableEditEvent e) {
-                            undo.addEdit(e.getEdit());
-                        }
-                    });
-
-                    //UNDO
-                    textArea.getActionMap().put("Undo",
-                            new AbstractAction("Undo") {
-                                public void actionPerformed(ActionEvent evt) {
-                                    try {
-                                        if (undo.canUndo()) {
-                                            undo.undo();
-                                        }
-                                    } catch (CannotUndoException e) {
-                                    }
-                                }
-                            });
-                    //UNDO SHORTCUT (CONTROL + Z)
-                    textArea.getInputMap().put(KeyStroke.getKeyStroke("control Z"), "Undo");
-
-                    //REDO
-                    textArea.getActionMap().put("Redo",
-                            new AbstractAction("Redo") {
-                                public void actionPerformed(ActionEvent evt) {
-                                    try {
-                                        if (undo.canRedo()) {
-                                            undo.redo();
-                                        }
-                                    } catch (CannotRedoException e) {
-                                    }
-                                }
-                            });
-                    //REDO SHORTCUT (CONTROL + Y)
-                    textArea.getInputMap().put(KeyStroke.getKeyStroke("control Y"), "Redo");
+                   
+                    
 
 
 
                     saver = new Saver(openedfile, textArea);
+                   
+                    
+                    
                     dictionaryPath = "/dictionary/";
 
                     Editor window = new Editor();
@@ -165,7 +134,7 @@ public class Editor {
     private void initialize() throws IOException, ClassNotFoundException, InstantiationException, IllegalAccessException, UnsupportedLookAndFeelException {
 
 
-
+    	
         frame = new JFrame("Untitled");
         frame.getContentPane().setBackground(Color.DARK_GRAY);
         frame.setBounds(100, 100, 707, 525);
@@ -182,93 +151,10 @@ public class Editor {
         scroll.setHorizontalScrollBarPolicy (ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         frame.getContentPane().add(scroll);
 
-
+        
         frame.addWindowListener(new WindowAdapter(){
             public void windowClosing(WindowEvent e){
-                if (openedfile != null) {
-                    try {
-                        int readchar;
-                        StringBuffer readString = new StringBuffer("");
-                        FileReader reader = new FileReader(openedfile);
-                        while((readchar = reader.read()) != -1) {
-                            readString.append((char)readchar);
-                        }
-                        reader.close();
-                        if (!textArea.getText().equals(readString.toString())) {
-                            int opt = JOptionPane.showConfirmDialog(frame, "Would you like to save your changes?");
-                            if (opt != JOptionPane.CANCEL_OPTION && opt != JOptionPane.CLOSED_OPTION) {
-                                if (opt == JOptionPane.YES_OPTION) {
-                                    String writeString = textArea.getText();
-                                    try {
-                                        FileWriter writer = new FileWriter(openedfile);
-                                        writer.write(writeString);
-                                        writer.close();
-
-                                    }catch (IOException error) {
-                                        error.printStackTrace();
-                                    }
-                                }
-                                if(saver.saveThread.isAlive()){
-                                    saver.stop();
-                                }
-                                frame.setVisible(false);
-                                frame.dispose();
-                            }
-                        }
-                        else {
-                        	if(saver.saveThread.isAlive()){
-                                saver.stop();
-                            }
-                            frame.setVisible(false);
-                            frame.dispose();
-                        }
-                    }catch (IOException error) {
-                        error.printStackTrace();
-                    }
-                }
-
-                else {
-                    if (!textArea.getText().equals("")) {
-                        int opt = JOptionPane.showConfirmDialog(frame, "Would you like to save your changes?");
-                        if (opt != JOptionPane.CANCEL_OPTION && opt != JOptionPane.CLOSED_OPTION) {
-                            if (opt == JOptionPane.YES_OPTION) {
-                                chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-                                int chooserret = chooser.showSaveDialog(frame);
-                                if (chooserret == JFileChooser.APPROVE_OPTION) {
-                                    if (!chooser.getSelectedFile().getAbsolutePath().endsWith(".txt"))
-                                        openedfile = new File (chooser.getSelectedFile().getAbsolutePath() + ".txt");
-                                    else
-                                        openedfile = chooser.getSelectedFile();
-                                    try {
-                                        if (openedfile.createNewFile()){
-                                            String writeString = textArea.getText();
-                                            FileWriter writer = new FileWriter(openedfile);
-                                            writer.write(writeString);
-                                            writer.close();
-
-                                            if(saver.saveThread.isAlive()){
-                                                saver.stop();
-                                            }
-                                            frame.setVisible(false);
-                                            frame.dispose();
-                                        }
-                                    }catch (IOException error) {
-                                        openedfile = null;
-                                        error.printStackTrace();
-                                    }
-                                }
-                            }
-                            else {
-                                frame.setVisible(false);
-                                frame.dispose();
-                            }
-                        }
-                    }
-                    else {
-                        frame.setVisible(false);
-                        frame.dispose();
-                    }
-                }
+                closeEditor();
             }
         });
 
@@ -280,6 +166,7 @@ public class Editor {
         menuBar.add(mnFile);
 
         JMenuItem mntmNew = new JMenuItem("New");
+        
         mntmNew.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 if (openedfile != null) {
@@ -304,15 +191,21 @@ public class Editor {
                                 }
                                 openedfile = null;
                                 frame.setTitle("Untitled");
+                                synchronized(textArea) {
                                 textArea.setText("");
+                                }
                                 if (saver.saveThread.isAlive())
                                 	saver.stop();
+                                
+                                
 
                             }
                             else if (opt == JOptionPane.NO_OPTION) {
                                 openedfile = null;
                                 frame.setTitle("Untitled");
+                                synchronized(textArea) {
                                 textArea.setText("");
+                                }
                                 if (saver.saveThread.isAlive())
                                 	saver.stop();
 
@@ -322,7 +215,9 @@ public class Editor {
                         else {
                             openedfile = null;
                             frame.setTitle("Untitled");
+                            synchronized (textArea) {
                             textArea.setText("");
+                            }
                             if (saver.saveThread.isAlive())
                             	saver.stop();
 
@@ -359,7 +254,9 @@ public class Editor {
                                     error.printStackTrace();
                                 }
                                 openedfile = null;
+                                synchronized (textArea) {
                                 textArea.setText("");
+                                }
                                 if (saver.saveThread.isAlive())
                                 	saver.stop();
 
@@ -367,7 +264,9 @@ public class Editor {
                         }
 
                         else if (opt == JOptionPane.NO_OPTION) {
-                            textArea.setText("");
+                        	synchronized (textArea) {
+                                textArea.setText("");
+                                }
                             if (saver.saveThread.isAlive())
                             	saver.stop();
 
@@ -378,8 +277,12 @@ public class Editor {
 
             }
         });
+       
+        
         mnFile.add(mntmNew);
 
+       
+        
         JMenuItem mntmOpen = new JMenuItem("Open");
         mntmOpen.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -395,7 +298,9 @@ public class Editor {
                                 readString.append((char)readchar);
                             }
                             frame.setTitle(openedfile.getName());
+                            synchronized (textArea) {
                             textArea.setText(readString.toString());
+                            }
                             reader.close();
 
                             saver.setOpenedFile(openedfile);
@@ -493,93 +398,7 @@ public class Editor {
         JMenuItem mntmClose = new JMenuItem("Close");
         mntmClose.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-
-                if (openedfile != null) {
-                    try {
-                        int readchar;
-                        StringBuffer readString = new StringBuffer("");
-                        FileReader reader = new FileReader(openedfile);
-                        while((readchar = reader.read()) != -1) {
-                            readString.append((char)readchar);
-                        }
-                        reader.close();
-                        if (!textArea.getText().equals(readString.toString())) {
-                            int opt = JOptionPane.showConfirmDialog(frame, "Would you like to save your changes?");
-                            if (opt != JOptionPane.CANCEL_OPTION && opt != JOptionPane.CLOSED_OPTION) {
-                                if (opt == JOptionPane.YES_OPTION) {
-                                    String writeString = textArea.getText();
-                                    try {
-                                        FileWriter writer = new FileWriter(openedfile);
-                                        writer.write(writeString);
-                                        writer.close();
-
-                                    }catch (IOException error) {
-                                        error.printStackTrace();
-                                    }
-                                }
-                                if(saver.saveThread.isAlive()){
-                                    saver.stop();
-                                }
-                                frame.setVisible(false);
-                                frame.dispose();
-                            }
-                        }
-                        else {
-                            if(saver.saveThread.isAlive()){
-                                saver.stop();
-                            }
-                            frame.setVisible(false);
-                            frame.dispose();
-                        }
-                    }catch (IOException error) {
-                        error.printStackTrace();
-                    }
-                }
-
-                else {
-                    if (!textArea.getText().equals("")) {
-                        int opt = JOptionPane.showConfirmDialog(frame, "Would you like to save your changes?");
-                        if (opt != JOptionPane.CANCEL_OPTION && opt != JOptionPane.CLOSED_OPTION) {
-                            if (opt == JOptionPane.YES_OPTION) {
-                                chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-                                int chooserret = chooser.showSaveDialog(frame);
-                                if (chooserret == JFileChooser.APPROVE_OPTION) {
-                                    if (!chooser.getSelectedFile().getAbsolutePath().endsWith(".txt"))
-                                        openedfile = new File (chooser.getSelectedFile().getAbsolutePath() + ".txt");
-                                    else
-                                        openedfile = chooser.getSelectedFile();
-                                    try {
-                                        if (openedfile.createNewFile()){
-                                            String writeString = textArea.getText();
-                                            FileWriter writer = new FileWriter(openedfile);
-                                            writer.write(writeString);
-                                            writer.close();
-                                            if(saver.saveThread.isAlive()){
-                                                saver.stop();
-                                            }
-                                            frame.setVisible(false);
-                                            frame.dispose();
-                                        }
-                                    }catch (IOException error) {
-                                        openedfile = null;
-                                        error.printStackTrace();
-                                    }
-
-                                }
-                            }
-                            else {
-                                frame.setVisible(false);
-                                frame.dispose();
-                                }
-                        }
-                    }
-
-                    else {
-                        frame.setVisible(false);
-                        frame.dispose();
-                    }
-                }
-
+            	closeEditor();
             }
         });
         mnFile.add(mntmClose);
@@ -592,36 +411,64 @@ public class Editor {
         JMenuItem mntmCut = new JMenuItem("Cut");
         mntmCut.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
+            	synchronized (textArea) {
                 if (!textArea.getText().equals("")) {
                     String cutString;
-                    if (textArea.getSelectedText() != null ) {
-                        cutString = textArea.getSelectedText();
-                        textArea.replaceSelection("");
-                    }
-                    else {
-                        cutString = textArea.getText();
-                        textArea.setText("");
-                    }
+                    cutString = textArea.getSelectedText();
+                    textArea.replaceSelection("");
                     StringSelection stringSelection = new StringSelection(cutString);
                     clipboard.setContents(stringSelection, null);
                 }
-
+            	}
             }
         });
+        
+        Document doc = textArea.getDocument();
+
+        doc.addUndoableEditListener(new UndoableEditListener() {
+            @Override
+            public void undoableEditHappened(UndoableEditEvent e) {
+                undo.addEdit(e.getEdit());
+            }
+        });
+        
+        JMenuItem mntmUndo = new JMenuItem("Undo");
+        mntmUndo.addActionListener(new ActionListener() {
+        	public void actionPerformed(ActionEvent arg0) {
+        		try {
+                    if (undo.canUndo()) {
+                        undo.undo();
+                    }
+                } catch (CannotUndoException e) {
+                }
+        	}
+        });
+        mnEdit.add(mntmUndo);
+        
+        JMenuItem mntmRedo = new JMenuItem("Redo");
+        mntmRedo.addActionListener(new ActionListener() {
+        	public void actionPerformed(ActionEvent arg0) {
+        		try {
+                    if (undo.canRedo()) {
+                        undo.redo();
+                    }
+                } catch (CannotRedoException e) {
+                }
+        	}
+        });
+        mnEdit.add(mntmRedo);
         mnEdit.add(mntmCut);
 
+      
         JMenuItem mntmCopy = new JMenuItem("Copy");
         mntmCopy.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
 
                 if (!textArea.getText().equals("")) {
                     String copyString;
-                    if (textArea.getSelectedText() != null ) {
-                        copyString = textArea.getSelectedText();
-                    }
-                    else {
-                        copyString = textArea.getText();
-                    }
+                
+                    copyString = textArea.getSelectedText();
+
                     StringSelection stringSelection = new StringSelection(copyString);
                     clipboard.setContents(stringSelection, null);
                 }
@@ -652,14 +499,17 @@ public class Editor {
         JMenuItem mntmDelete = new JMenuItem("Delete");
         mntmDelete.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                if (textArea.getSelectedText() != null)
+            	synchronized (textArea) {
+                
                     textArea.replaceSelection("");
-                else
-                    textArea.setText("");
+                
+            	}
             }
         });
         mnEdit.add(mntmDelete);
-
+        
+        monitor = new ButtonMonitor(mntmCut, mntmCopy, mntmDelete, mntmUndo, mntmRedo, textArea, undo);
+        monitor.monitorThread.start();
         JMenu mnTheme = new JMenu("Theme");
         menuBar.add(mnTheme);
 
@@ -685,8 +535,160 @@ public class Editor {
         });
         mnTheme.add(mntmLight);
 
+        textArea.getInputMap().put(KeyStroke.getKeyStroke("control N"), "newFile");
+         textArea.getActionMap().put("newFile", new AbstractAction() {
+	         	public void actionPerformed(ActionEvent e) {
+	         		mntmNew.doClick();
+	         	}
+        });
+         
+        textArea.getInputMap().put(KeyStroke.getKeyStroke("control O"), "openFile");
+          textArea.getActionMap().put("openFile", new AbstractAction() {
+	          	public void actionPerformed(ActionEvent e) {
+	          		mntmOpen.doClick();
+	          	}
+        });
+          
+        textArea.getInputMap().put(KeyStroke.getKeyStroke("control S"), "saveFile");
+           textArea.getActionMap().put("saveFile", new AbstractAction() {
+	           	public void actionPerformed(ActionEvent e) {
+	           		mntmSave.doClick();
+	           	}
+        });
+        
+        textArea.getInputMap().put(KeyStroke.getKeyStroke("control shift S"), "saveasFile");
+           textArea.getActionMap().put("saveasFile", new AbstractAction() {
+            	public void actionPerformed(ActionEvent e) {
+            		mntmSaveAs.doClick();
+            	}
+        });
+           
+        textArea.getActionMap().put("Undo",
+                   new AbstractAction("Undo") {
+                       public void actionPerformed(ActionEvent evt) {
+                           mntmUndo.doClick();
+                       }
+           });
+           //UNDO SHORTCUT (CONTROL + Z)
+           textArea.getInputMap().put(KeyStroke.getKeyStroke("control Z"), "Undo");
 
+           //REDO
+           textArea.getActionMap().put("Redo",
+                   new AbstractAction("Redo") {
+                       public void actionPerformed(ActionEvent evt) {
+                           mntmRedo.doClick();
+ 
+                       }
+                   });
+           //REDO SHORTCUT (CONTROL + Y)
+           textArea.getInputMap().put(KeyStroke.getKeyStroke("control Y"), "Redo");
+        
+   
+        
+        
     }
+    
+    
+    public void closeEditor() {
+	    if (openedfile != null) {
+	        try {
+	            int readchar;
+	            StringBuffer readString = new StringBuffer("");
+	            FileReader reader = new FileReader(openedfile);
+	            while((readchar = reader.read()) != -1) {
+	                readString.append((char)readchar);
+	            }
+	            reader.close();
+	            if (!textArea.getText().equals(readString.toString())) {
+	                int opt = JOptionPane.showConfirmDialog(frame, "Would you like to save your changes?");
+	                if (opt != JOptionPane.CANCEL_OPTION && opt != JOptionPane.CLOSED_OPTION) {
+	                    if (opt == JOptionPane.YES_OPTION) {
+	                        String writeString = textArea.getText();
+	                        try {
+	                            FileWriter writer = new FileWriter(openedfile);
+	                            writer.write(writeString);
+	                            writer.close();
+	
+	                        }catch (IOException error) {
+	                            error.printStackTrace();
+	                        }
+	                    }
+	                    if(saver.saveThread.isAlive()){
+	                        saver.stop();
+	                    }
+	                    if(monitor.monitorThread.isAlive())
+	                    	monitor.stop();
+	                    
+	                    frame.setVisible(false);
+	                    frame.dispose();
+	                }
+	            }
+	            else {
+	            	if(saver.saveThread.isAlive()){
+	                    saver.stop();
+	                }
+	            	if(monitor.monitorThread.isAlive())
+                    	monitor.stop();
+                    
+	                frame.setVisible(false);
+	                frame.dispose();
+	            }
+	        }catch (IOException error) {
+	            error.printStackTrace();
+	        }
+	    }
+	
+	    else {
+	        if (!textArea.getText().equals("")) {
+	            int opt = JOptionPane.showConfirmDialog(frame, "Would you like to save your changes?");
+	            if (opt != JOptionPane.CANCEL_OPTION && opt != JOptionPane.CLOSED_OPTION) {
+	                if (opt == JOptionPane.YES_OPTION) {
+	                    chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+	                    int chooserret = chooser.showSaveDialog(frame);
+	                    if (chooserret == JFileChooser.APPROVE_OPTION) {
+	                        if (!chooser.getSelectedFile().getAbsolutePath().endsWith(".txt"))
+	                            openedfile = new File (chooser.getSelectedFile().getAbsolutePath() + ".txt");
+	                        else
+	                            openedfile = chooser.getSelectedFile();
+	                        try {
+	                            if (openedfile.createNewFile()){
+	                                String writeString = textArea.getText();
+	                                FileWriter writer = new FileWriter(openedfile);
+	                                writer.write(writeString);
+	                                writer.close();
+	
+	                                if(saver.saveThread.isAlive()){
+	                                    saver.stop();
+	                                }
+	                                if(monitor.monitorThread.isAlive())
+	        	                    	monitor.stop();
+	                                frame.setVisible(false);
+	                                frame.dispose();
+	                            }
+	                        }catch (IOException error) {
+	                            openedfile = null;
+	                            error.printStackTrace();
+	                        }
+	                    }
+	                }
+	                else {
+	                	if(monitor.monitorThread.isAlive())
+	                    	monitor.stop();
+	                    
+	                    frame.setVisible(false);
+	                    frame.dispose();
+	                }
+	            }
+	        }
+	        else {
+	        	if(monitor.monitorThread.isAlive())
+                	monitor.stop();
+                
+	            frame.setVisible(false);
+	            frame.dispose();
+	        }
+	    }
+	}
 
     public static void setCheckerOptions(){
         checkerOptions.setCaseSensitive(false);
