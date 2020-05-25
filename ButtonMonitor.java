@@ -39,6 +39,12 @@ public class ButtonMonitor implements Runnable{
         	
         	checkAbility();
         	checkDoability();
+        	try {
+				monitorThread.sleep(200);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 
         }
 
