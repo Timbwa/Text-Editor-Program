@@ -1,4 +1,4 @@
-
+package com.TextEditor;
 import java.awt.EventQueue;
 
 import javax.swing.*;
@@ -13,7 +13,6 @@ import java.awt.datatransfer.Transferable;
 
 import java.awt.event.ActionListener;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -24,8 +23,8 @@ import java.awt.BorderLayout;
 
 import com.inet.jortho.PopupListener;
 import com.inet.jortho.SpellChecker;
-import com.inet.jortho.FileUserDictionary;
 import com.inet.jortho.SpellCheckerOptions;
+import org.jetbrains.annotations.NotNull;
 
 import javax.swing.AbstractAction;
 import javax.swing.JFrame;
@@ -35,16 +34,15 @@ import javax.swing.KeyStroke;
 import javax.swing.event.UndoableEditEvent;
 import javax.swing.event.UndoableEditListener;
 import javax.swing.text.Document;
-import javax.swing.text.JTextComponent;
 import javax.swing.undo.CannotRedoException;
 import javax.swing.undo.CannotUndoException;
 import javax.swing.undo.UndoManager;
-import javax.swing.undo.UndoableEdit;
 
-import java.util.Stack;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-
+/**
+ * The entry point class to the application that will provide interaction over GUI
+ * @author Ahmed El Cheikh Ammar
+ * @version 8, 26 May 2020
+ * */
 public class Editor {
 
     private JFrame frame;
@@ -57,55 +55,34 @@ public class Editor {
     public static ButtonMonitor monitor;
     private static JTextArea textArea;
     final static UndoManager undo = new UndoManager();
-    
-    private static String dictionaryPath;
-  
-
-
 
     /**
-     * Launch the application.
-     * @throws UnsupportedLookAndFeelException
-     * @throws IllegalAccessException
-     * @throws InstantiationException
+     * @param args
+     *         no command line arguments are used. Possibly in the future.
      * @throws ClassNotFoundException
+     * @throws InstantiationException
+     * @throws IllegalAccessException
+     * @throws UnsupportedLookAndFeelException
      */
     public static void main(String[] args) throws ClassNotFoundException, InstantiationException, IllegalAccessException, UnsupportedLookAndFeelException {
 
         UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                try {
-                    textArea = new JTextArea();             
-                    checkerOptions = new SpellCheckerOptions();
-                    spellCheck = new SpellCheck(textArea);
+        EventQueue.invokeLater(() -> {
+            try {
+                textArea = new JTextArea();
+                checkerOptions = new SpellCheckerOptions();
+                spellCheck = new SpellCheck(textArea);
 
-                    spellCheck.setTextArea(textArea);
+                spellCheck.setTextArea(textArea);
+                saver = new Saver(openedfile, textArea);
 
+                Editor window = new Editor();
+                window.frame.setVisible(true);
 
-                    //UNDO REDO
-                   
-                    
-
-
-
-                    saver = new Saver(openedfile, textArea);
-                   
-                    
-                    
-                    dictionaryPath = "/dictionary/";
-
-                    Editor window = new Editor();
-                    window.frame.setVisible(true);
-
-
-
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         });
-        //spellCheck.getThread().start();
     }
 
     /**
@@ -125,16 +102,9 @@ public class Editor {
 
     /**
      * Initialize the contents of the frame.
-     * @throws IOException
-     * @throws UnsupportedLookAndFeelException
-     * @throws IllegalAccessException
-     * @throws InstantiationException
-     * @throws ClassNotFoundException
+     *
      */
-    private void initialize() throws IOException, ClassNotFoundException, InstantiationException, IllegalAccessException, UnsupportedLookAndFeelException {
-
-
-    	
+    private void initialize(){
         frame = new JFrame("Untitled");
         frame.getContentPane().setBackground(Color.DARK_GRAY);
         frame.setBounds(100, 100, 707, 525);
@@ -146,18 +116,17 @@ public class Editor {
         textArea.setForeground(new Color(0, 206, 209));
         textArea.setCaretColor(new Color(230, 230, 230));
         textArea.setBackground(Color.DARK_GRAY);
+
         JScrollPane scroll = new JScrollPane (textArea);
         scroll.setVerticalScrollBarPolicy (ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
         scroll.setHorizontalScrollBarPolicy (ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         frame.getContentPane().add(scroll);
 
-        
         frame.addWindowListener(new WindowAdapter(){
             public void windowClosing(WindowEvent e){
                 closeEditor();
             }
         });
-
 
         JMenuBar menuBar = new JMenuBar();
         frame.setJMenuBar(menuBar);
@@ -167,115 +136,90 @@ public class Editor {
 
         JMenuItem mntmNew = new JMenuItem("New                                    Ctrl+N");
         
-        mntmNew.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                if (openedfile != null) {
-                    try {
-                        int readchar;
-                        StringBuffer readString = new StringBuffer("");
-                        FileReader reader = new FileReader(openedfile);
-                        while((readchar = reader.read()) != -1) {
-                            readString.append((char)readchar);
-                        }
-                        reader.close();
-                        if (!textArea.getText().equals(readString.toString())) {
-                            int opt = JOptionPane.showConfirmDialog(frame, "Would you like to save your changes?");
-                            if (opt == JOptionPane.YES_OPTION) {
-                                String writeString = textArea.getText();
-                                try {
-                                    FileWriter writer = new FileWriter(openedfile);
-                                    writer.write(writeString);
-                                    writer.close();
-                                }catch (IOException error) {
-                                    error.printStackTrace();
-                                }
-                                openedfile = null;
-                                frame.setTitle("Untitled");
-                                synchronized(textArea) {
-                                textArea.setText("");
-                                }
-                                if (saver.saveThread.isAlive())
-                                	saver.stop();
-                                
-                                
-
+        mntmNew.addActionListener(e -> {
+            if (openedfile != null) {
+                try {
+                    int readchar;
+                    StringBuffer readString = new StringBuffer("");
+                    FileReader reader = new FileReader(openedfile);
+                    while((readchar = reader.read()) != -1) {
+                        readString.append((char)readchar);
+                    }
+                    reader.close();
+                    if (!textArea.getText().equals(readString.toString())) {
+                        int opt = JOptionPane.showConfirmDialog(frame, "Would you like to save your changes?");
+                        if (opt == JOptionPane.YES_OPTION) {
+                            String writeString = textArea.getText();
+                            try {
+                                FileWriter writer = new FileWriter(openedfile);
+                                writer.write(writeString);
+                                writer.close();
+                            }catch (IOException error) {
+                                error.printStackTrace();
                             }
-                            else if (opt == JOptionPane.NO_OPTION) {
-                                openedfile = null;
-                                frame.setTitle("Untitled");
-                                synchronized(textArea) {
-                                textArea.setText("");
-                                }
-                                if (saver.saveThread.isAlive())
-                                	saver.stop();
-
-                            }
-                        }
-
-                        else {
                             openedfile = null;
                             frame.setTitle("Untitled");
+                            synchronized(textArea) {
+                            textArea.setText("");
+                            }
+                            if (saver.saveThread.isAlive())
+                                saver.stop();
+                        }
+                        else if (opt == JOptionPane.NO_OPTION) {
+                            openedfile = null;
+                            frame.setTitle("Untitled");
+                            synchronized(textArea) {
+                            textArea.setText("");
+                            }
+                            if (saver.saveThread.isAlive())
+                                saver.stop();
+                        }
+                    }
+
+                    else {
+                        openedfile = null;
+                        frame.setTitle("Untitled");
+                        synchronized (textArea) {
+                        textArea.setText("");
+                        }
+                        if (saver.saveThread.isAlive())
+                            saver.stop();
+                    }
+                }catch (IOException error) {
+                    error.printStackTrace();
+                }
+            }
+
+            else {
+                if (!textArea.getText().equals("")) {
+                    int opt = JOptionPane.showConfirmDialog(frame, "Would you like to save your changes?");
+                    if (opt == JOptionPane.YES_OPTION) {
+                        chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+                        int chooserret = chooser.showSaveDialog(frame);
+                        if (chooserret == JFileChooser.APPROVE_OPTION) {
+                            closeIfyes(chooser);
+                            openedfile = null;
                             synchronized (textArea) {
                             textArea.setText("");
                             }
                             if (saver.saveThread.isAlive())
-                            	saver.stop();
+                                saver.stop();
 
                         }
-
-                    }catch (IOException error) {
-                        error.printStackTrace();
                     }
-                }
 
-                else {
-                    if (!textArea.getText().equals("")) {
-                        int opt = JOptionPane.showConfirmDialog(frame, "Would you like to save your changes?");
-                        if (opt == JOptionPane.YES_OPTION) {
-                            chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-                            int chooserret = chooser.showSaveDialog(frame);
-                            if (chooserret == JFileChooser.APPROVE_OPTION) {
-                                if (!chooser.getSelectedFile().getAbsolutePath().endsWith(".txt"))
-                                    openedfile = new File (chooser.getSelectedFile().getAbsolutePath() + ".txt");
-                                else
-                                    openedfile = chooser.getSelectedFile();
-                                try {
-                                    if (openedfile.createNewFile()){
-                                        String writeString = textArea.getText();
-                                        FileWriter writer = new FileWriter(openedfile);
-                                        writer.write(writeString);
-                                        writer.close();
-
-                                        //saver.setOpenedFile(openedfile);
-                                        //saver.saveThread.start();
-                                    }
-                                }catch (IOException error) {
-                                    openedfile = null;
-                                    error.printStackTrace();
-                                }
-                                openedfile = null;
-                                synchronized (textArea) {
-                                textArea.setText("");
-                                }
-                                if (saver.saveThread.isAlive())
-                                	saver.stop();
-
+                    else if (opt == JOptionPane.NO_OPTION) {
+                        synchronized (textArea) {
+                            textArea.setText("");
                             }
-                        }
-
-                        else if (opt == JOptionPane.NO_OPTION) {
-                        	synchronized (textArea) {
-                                textArea.setText("");
-                                }
-                            if (saver.saveThread.isAlive())
-                            	saver.stop();
-
-                        }
+                        if (saver.saveThread.isAlive())
+                            saver.stop();
 
                     }
-                }
 
+                }
             }
+
         });
        
         
@@ -334,25 +278,8 @@ public class Editor {
                                 chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
                                 int chooserret = chooser.showSaveDialog(frame);
                                 if (chooserret == JFileChooser.APPROVE_OPTION) {
-                                    if (!chooser.getSelectedFile().getAbsolutePath().endsWith(".txt"))
-                                        openedfile = new File (chooser.getSelectedFile().getAbsolutePath() + ".txt");
-                                    else
-                                        openedfile = chooser.getSelectedFile();
-                                    try {
-                                        if (openedfile.createNewFile()){
-                                            String writeString = textArea.getText();
-                                            FileWriter writer = new FileWriter(openedfile);
-                                            writer.write(writeString);
-                                            writer.close();
+                                    closeIfyes(chooser);
 
-                                            //saver.setOpenedFile(openedfile);
-                                            //saver.saveThread.start();
-                                        }
-                                    }catch (IOException error) {
-                                        openedfile = null;
-                                        error.printStackTrace();
-                                    }
-                                    
                                     openFile();
 
                                 }
@@ -496,47 +423,40 @@ public class Editor {
         });
         
         JMenuItem mntmUndo = new JMenuItem("Undo                                   Ctrl+Z");
-        mntmUndo.addActionListener(new ActionListener() {
-        	public void actionPerformed(ActionEvent arg0) {
-        		try {
+        mntmUndo.addActionListener(arg0 -> {
+            try {
                     if (undo.canUndo()) {
-                        undo.undo();
+                    undo.undo();
                     }
-                } catch (CannotUndoException e) {
-                }
-        	}
+            } catch (CannotUndoException ignored) {
+            }
         });
         mnEdit.add(mntmUndo);
         
         JMenuItem mntmRedo = new JMenuItem("Redo                                   Ctrl+Y");
-        mntmRedo.addActionListener(new ActionListener() {
-        	public void actionPerformed(ActionEvent arg0) {
-        		try {
+        mntmRedo.addActionListener(arg0 -> {
+            try {
                     if (undo.canRedo()) {
-                        undo.redo();
+                    undo.redo();
                     }
-                } catch (CannotRedoException e) {
+                } catch (CannotRedoException ignored) {
                 }
-        	}
         });
         mnEdit.add(mntmRedo);
         mnEdit.add(mntmCut);
 
-      
         JMenuItem mntmCopy = new JMenuItem("Copy                                   Ctrl+C");
-        mntmCopy.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
+        mntmCopy.addActionListener(e -> {
 
-                if (!textArea.getText().equals("")) {
-                    String copyString;
-                
-                    copyString = textArea.getSelectedText();
+            if (!textArea.getText().equals("")) {
+                String copyString;
 
-                    StringSelection stringSelection = new StringSelection(copyString);
-                    clipboard.setContents(stringSelection, null);
-                }
+                copyString = textArea.getSelectedText();
 
+                StringSelection stringSelection = new StringSelection(copyString);
+                clipboard.setContents(stringSelection, null);
             }
+
         });
         mnEdit.add(mntmCopy);
 
@@ -544,8 +464,6 @@ public class Editor {
         mntmPaste.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent arg0) {
                 int pos = textArea.getCaretPosition();
-
-
                 Transferable t = clipboard.getContents(this);
                 if (t != null) {
                     try {
@@ -560,19 +478,17 @@ public class Editor {
         mnEdit.add(mntmPaste);
 
         JMenuItem mntmDelete = new JMenuItem("Delete");
-        mntmDelete.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-            	synchronized (textArea) {
-                
-                    textArea.replaceSelection("");
-                
-            	}
+        mntmDelete.addActionListener(e -> {
+            synchronized (textArea) {
+                textArea.replaceSelection("");
             }
         });
         mnEdit.add(mntmDelete);
         
         monitor = new ButtonMonitor(mntmCut, mntmCopy, mntmDelete, mntmUndo, mntmRedo, textArea, undo);
         monitor.monitorThread.start();
+
+
         JMenu mnTheme = new JMenu("Theme");
         menuBar.add(mnTheme);
 
@@ -640,18 +556,37 @@ public class Editor {
                    new AbstractAction("Redo") {
                        public void actionPerformed(ActionEvent evt) {
                            mntmRedo.doClick();
- 
                        }
                    });
            //REDO SHORTCUT (CONTROL + Y)
            textArea.getInputMap().put(KeyStroke.getKeyStroke("control Y"), "Redo");
         
-   
-        
-        
     }
-    
-    
+
+    private static void closeIfyes(@NotNull JFileChooser chooser) {
+        if (!chooser.getSelectedFile().getAbsolutePath().endsWith(".txt"))
+            openedfile = new File(chooser.getSelectedFile().getAbsolutePath() + ".txt");
+        else
+            openedfile = chooser.getSelectedFile();
+        try {
+            if (openedfile.createNewFile()){
+                String writeString = textArea.getText();
+                FileWriter writer = new FileWriter(openedfile);
+                writer.write(writeString);
+                writer.close();
+            }
+        }catch (IOException error) {
+            openedfile = null;
+            error.printStackTrace();
+        }
+    }
+
+
+    /**
+     * <p>
+     *     Closes the editor and stops the running threads
+     * <p/>
+     */
     private void closeEditor() {
 	    if (openedfile != null) {
 	        try {
@@ -752,7 +687,10 @@ public class Editor {
 	        }
 	    }
 	}
-    
+
+    /**
+     * Opens a file using an explorer window
+     */
     private void openFile() {
     	int chooserret = chooser.showOpenDialog(frame);
         if (chooserret == JFileChooser.APPROVE_OPTION) {
@@ -781,6 +719,12 @@ public class Editor {
     	
     }
 
+    /**
+     * <p>
+     *     Sets the spell checker options
+     * @see <a href="http://jortho.sourceforge.net/">JOrtho library documentation </a>
+     * </p>
+     * */
     public static void setCheckerOptions(){
         checkerOptions.setCaseSensitive(false);
         checkerOptions.setIgnoreAllCapsWords(true);
