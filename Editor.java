@@ -165,7 +165,7 @@ public class Editor {
         JMenu mnFile = new JMenu("File");
         menuBar.add(mnFile);
 
-        JMenuItem mntmNew = new JMenuItem("New");
+        JMenuItem mntmNew = new JMenuItem("New                                    Ctrl+N");
         
         mntmNew.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -283,7 +283,7 @@ public class Editor {
 
        
         
-        JMenuItem mntmOpen = new JMenuItem("Open");
+        JMenuItem mntmOpen = new JMenuItem("Open                                   Ctrl+O");
         mntmOpen.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 if (e.getSource() == mntmOpen) {
@@ -374,7 +374,7 @@ public class Editor {
 
         mnFile.add(mntmOpen);
 
-        JMenuItem mntmSave = new JMenuItem("Save");
+        JMenuItem mntmSave = new JMenuItem("Save                                    Ctrl+S");
         mntmSave.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 if (openedfile != null && openedfile.canWrite()) {
@@ -383,7 +383,7 @@ public class Editor {
                         FileWriter writer = new FileWriter(openedfile);
                         writer.write(writeString);
                         writer.close();
-                        saver.setOpenedFile(openedfile);
+                        //saver.setOpenedFile(openedfile);
                         if(!saver.saveThread.isAlive()){
                             saver.saveThread.start();
                         }
@@ -425,7 +425,7 @@ public class Editor {
         });
         mnFile.add(mntmSave);
 
-        JMenuItem mntmSaveAs = new JMenuItem("Save as");
+        JMenuItem mntmSaveAs = new JMenuItem("Save as                      Ctrl+Shift+S");
         mntmSaveAs.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
@@ -471,7 +471,7 @@ public class Editor {
 
         
 
-        JMenuItem mntmCut = new JMenuItem("Cut");
+        JMenuItem mntmCut = new JMenuItem("Cut                                      Ctrl+X");
         mntmCut.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
             	synchronized (textArea) {
@@ -495,7 +495,7 @@ public class Editor {
             }
         });
         
-        JMenuItem mntmUndo = new JMenuItem("Undo");
+        JMenuItem mntmUndo = new JMenuItem("Undo                                   Ctrl+Z");
         mntmUndo.addActionListener(new ActionListener() {
         	public void actionPerformed(ActionEvent arg0) {
         		try {
@@ -508,7 +508,7 @@ public class Editor {
         });
         mnEdit.add(mntmUndo);
         
-        JMenuItem mntmRedo = new JMenuItem("Redo");
+        JMenuItem mntmRedo = new JMenuItem("Redo                                   Ctrl+Y");
         mntmRedo.addActionListener(new ActionListener() {
         	public void actionPerformed(ActionEvent arg0) {
         		try {
@@ -523,7 +523,7 @@ public class Editor {
         mnEdit.add(mntmCut);
 
       
-        JMenuItem mntmCopy = new JMenuItem("Copy");
+        JMenuItem mntmCopy = new JMenuItem("Copy                                   Ctrl+C");
         mntmCopy.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
 
@@ -540,7 +540,7 @@ public class Editor {
         });
         mnEdit.add(mntmCopy);
 
-        JMenuItem mntmPaste = new JMenuItem("Paste");
+        JMenuItem mntmPaste = new JMenuItem("Paste                                   Ctrl+V");
         mntmPaste.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent arg0) {
                 int pos = textArea.getCaretPosition();
